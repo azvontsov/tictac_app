@@ -13,7 +13,12 @@ const Upload = () => {
 const [isLoading, setIsLoading] = useState(false);
 const [videoAsset, setVideoAsset] = useState<SanityAssetDocument | undefined>();
 const [wrongFileType, setWrongFileType] = useState(false);
-const [topic, setTopic] = useState<String>(topics[0].name);
+const [category, setCategory] = useState<String>(topics[0].name);
+const [caption, setCaption] = useState('');
+const [savingPost, setSavingPost] = useState<Boolean>(false);
+const router = useRouter();
+
+const { userProfile }: { userProfile: any } = useAuthStore();
 
 const uploadVideo = async (e: any) =>{
     const selectedFile = e.target.files[0];
@@ -36,6 +41,40 @@ const uploadVideo = async (e: any) =>{
         setWrongFileType(true);
     }
 }
+
+const handlePost = async () => {
+    if (caption && videoAsset?._id && category) {
+      setSavingPost(true);
+
+      const document = {
+        _type: 'post',
+        caption,
+        video: {
+          _type: 'file',
+          asset: {
+            _type: 'reference',
+            _ref: videoAsset?._id,
+          },
+        },
+        userId: userProfile?._id,
+        postedBy: {
+          _type: 'postedBy',
+          _ref: userProfile?._id,
+        },
+        topic: category
+      };
+
+      await axios.post('http://localhost:3000/api/post', document);
+        
+      router.push('/');
+    }
+  };
+  const handleDiscard = () => {
+    setSavingPost(false);
+    setVideoAsset(undefined);
+    setCaption('');
+    setCategory('');
+  };
 
   return (
     <div className='flex w-full h-full absolute left-0 top-[60px] mb-10 pt-10 lg:pt-20 bg-[#f8f8f8] justify-center'>
@@ -103,14 +142,14 @@ const uploadVideo = async (e: any) =>{
                             <label className='text-md font-medium '>Caption</label>
                             <input
                                 type='text'
-                                value=''
-                                onChange={()=>{}}
+                                value={caption}
+                                onChange={(e)=>{setCaption(e.target.value)}}
                                 className='rounded lg:after:w-650 outline-none text-md border-2 border-gray-200 p-2'
                             />
                             <label className='text-md font-medium '>Choose a category</label>
                             <select
                                 onChange={(e) => {
-                                setTopic(e.target.value);
+                                setCategory(e.target.value);
                                 }}
                                 className='outline-none lg:w-650 border-2 border-gray-200 text-md capitalize lg:p-4 p-2 rounded cursor-pointer'
                             >
@@ -126,7 +165,7 @@ const uploadVideo = async (e: any) =>{
                             </select>
                             <div className='flex gap-6 mt-10'>
                                 <button
-                                    onClick={() => {}}
+                                    onClick={handleDiscard}
                                     type='button'
                                     className='border-gray-300 border-2 text-md font-medium p-2 rounded w-28 lg:w-44 outline-none'
                                 >
@@ -134,7 +173,7 @@ const uploadVideo = async (e: any) =>{
                                 </button>
                                 <button
                                 disabled={videoAsset?.url ? false : true}
-                                onClick={() => {}}
+                                onClick={handlePost}
                                 type='button'
                                 className='bg-[#ffd000] text-white  text-md font-medium p-2 rounded w-28 lg:w-44 outline-none'
                                 >
