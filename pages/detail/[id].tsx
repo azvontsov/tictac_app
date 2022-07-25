@@ -14,10 +14,16 @@ const Detail = () => {
   )
 }
 
-export const getServerSideProps = async () => {
+export const getServerSideProps = async ({
   params: { id },
-} : {
-  params: { id: string}
-}
+}: {
+  params: { id: string };
+}) => {
+  const res = await axios.get(`${BASE_URL}/api/post/${id}`);
+
+  return {
+    props: { postDetails: res.data },
+  };
+};
 
 export default Detail
